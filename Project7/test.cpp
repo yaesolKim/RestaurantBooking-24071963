@@ -14,7 +14,6 @@ protected:
 
 		bookingScheduler.setSmsSender(&testableSmsSender);
 		bookingScheduler.setMailSender(&testableMailSender);
-		//bookingScheduler.setBookingScheduler(&testableBookingScheduler);
 	}
 public:
 	tm getTime(int year, int month, int day, int hour, int min) {
@@ -34,11 +33,13 @@ public:
 	const int CAPACITY_PER_HOUR = 3;
 	Customer CUSTOMER_WITHOUT_EMAIL{ "Fake name", "010-1234-5678" };
 	Customer CUSTOMER_WITH_EMAIL{ "Fake name", "010-1234-5678", "ys@samsung.com"};
+
+	tm SUNDAY_DATETIME = getTime(2021, 3, 28, 17, 0);
+	tm MONDAY_DATETIME = getTime(2024, 6, 3, 17, 0);
 	BookingScheduler bookingScheduler{ CAPACITY_PER_HOUR };
 
 	TestableSmsSender testableSmsSender;
 	TestableMailSender testableMailSender;
-	//TestableBookingScheduler testableBookingScheduler;
 };
 
 TEST_F(BookingSchedulerTest, 예약은정시에만가능하다정시가아닌경우예약불가) {
@@ -116,8 +117,7 @@ TEST_F(BookingSchedulerTest, 이메일이있는경우에는이메일발송) {
 }
 
 TEST_F(BookingSchedulerTest, 현재날짜가일요일인경우예약불가예외처리) {
-	tm dateTime = { 0, 0, 17, 28, 3 - 1, 2021 - 1900, 0, 0, -1 };
-	BookingScheduler* bookingScheduler = new TestableBookingScheduler{ CAPACITY_PER_HOUR, dateTime };
+	BookingScheduler* bookingScheduler = new TestableBookingScheduler{ CAPACITY_PER_HOUR, SUNDAY_DATETIME };
 	Schedule* schedule = new Schedule{ ON_THE_HOUR, UNDER_CAPACITY, CUSTOMER_WITH_EMAIL };
 	try {
 		//act
@@ -132,10 +132,7 @@ TEST_F(BookingSchedulerTest, 현재날짜가일요일인경우예약불가예외처리) {
 }
 
 TEST_F(BookingSchedulerTest, 현재날짜가일요일이아닌경우예약가능) {
-	//arrange
-	tm dateTime = { 0, 0, 17, 3, 6 - 1, 2024 - 1900, 0, 0, -1 };
-	BookingScheduler* bookingScheduler = new TestableBookingScheduler{ CAPACITY_PER_HOUR, dateTime };
-	//act
+	BookingScheduler* bookingScheduler = new TestableBookingScheduler{ CAPACITY_PER_HOUR, MONDAY_DATETIME };
 	Schedule* schedule = new Schedule{ ON_THE_HOUR, UNDER_CAPACITY, CUSTOMER_WITH_EMAIL };
 	bookingScheduler->addSchedule(schedule);
 	//assert
