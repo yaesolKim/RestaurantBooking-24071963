@@ -48,10 +48,7 @@
     <ClCompile Include="$(MSBuildThisFileDirectory)..\..\lib\native\src\gmock\gmock-all.cc">
       <Filter>소스 파일</Filter>
     </ClCompile>
-    <ClCompile Include="sunday_booking_scheduler.cpp">
-      <Filter>테스트 파일</Filter>
-    </ClCompile>
-    <ClCompile Include="monday_booking_scheduler.cpp">
+    <ClCompile Include="testable_booking_scheduler.cpp">
       <Filter>테스트 파일</Filter>
     </ClCompile>
   </ItemGroup>
