@@ -1,6 +1,7 @@
 #include "gmock/gmock.h"
 #include "booking_scheduler.cpp"
 #include "testable_sms_sender.cpp"
+#include "testable_mail_sender.cpp"
 
 using namespace testing;
 
@@ -28,7 +29,8 @@ public:
 	tm NOT_ON_THE_HOUR, ON_THE_HOUR;
 	const int UNDER_CAPACITY = 1;
 	const int CAPACITY_PER_HOUR = 3;
-	Customer customer{ "Fake name", "010-1234-5678" };
+	Customer CUSTOMER_WITHOUT_EMAIL{ "Fake name", "010-1234-5678" };
+	Customer CUSTOMER_WITH_EMAIL{ "Fake name", "010-1234-5678", "ys@samsung.com"};
 	BookingScheduler bookingScheduler{ CAPACITY_PER_HOUR };
 
 	TestableSmsSender testableSmsSender;
@@ -36,7 +38,7 @@ public:
 
 TEST_F(BookingSchedulerTest, 예약은정시에만가능하다정시가아닌경우예약불가) {
 	
-	Schedule* schedule = new Schedule{ NOT_ON_THE_HOUR, UNDER_CAPACITY, customer };
+	Schedule* schedule = new Schedule{ NOT_ON_THE_HOUR, UNDER_CAPACITY, CUSTOMER_WITHOUT_EMAIL };
 
 	EXPECT_THROW({
 		bookingScheduler.addSchedule(schedule);
@@ -46,7 +48,7 @@ TEST_F(BookingSchedulerTest, 예약은정시에만가능하다정시가아닌경우예약불가) {
 
 TEST_F(BookingSchedulerTest, 예약은정시에만가능하다정시인경우예약가능) {
 	
-	Schedule* schedule = new Schedule{ ON_THE_HOUR, UNDER_CAPACITY, customer };
+	Schedule* schedule = new Schedule{ ON_THE_HOUR, UNDER_CAPACITY, CUSTOMER_WITHOUT_EMAIL };
 
 	bookingScheduler.addSchedule(schedule);
 
@@ -56,12 +58,12 @@ TEST_F(BookingSchedulerTest, 예약은정시에만가능하다정시인경우예약가능) {
 
 TEST_F(BookingSchedulerTest, 시간대별인원제한이있다같은시간대에Capacity초과할경우예외발생) {
 
-	Schedule* schedule = new Schedule{ ON_THE_HOUR, CAPACITY_PER_HOUR, customer };
+	Schedule* schedule = new Schedule{ ON_THE_HOUR, CAPACITY_PER_HOUR, CUSTOMER_WITHOUT_EMAIL };
 
 	bookingScheduler.addSchedule(schedule);
 
 	try {
-		Schedule* newSchedule = new Schedule{ ON_THE_HOUR, UNDER_CAPACITY, customer };
+		Schedule* newSchedule = new Schedule{ ON_THE_HOUR, UNDER_CAPACITY, CUSTOMER_WITHOUT_EMAIL };
 		bookingScheduler.addSchedule(newSchedule);
 		FAIL();
 	}
@@ -74,18 +76,18 @@ TEST_F(BookingSchedulerTest, 시간대별인원제한이있다같은시간대에Capacity초과할경�
 
 TEST_F(BookingSchedulerTest, 시간대별인원제한이있다같은시간대가다르면Capacity차있어도스케쥴추가성공) {
 
-	Schedule* schedule = new Schedule{ ON_THE_HOUR, CAPACITY_PER_HOUR, customer };
+	Schedule* schedule = new Schedule{ ON_THE_HOUR, CAPACITY_PER_HOUR, CUSTOMER_WITHOUT_EMAIL };
 	bookingScheduler.addSchedule(schedule);
 
 	tm diffHour = addHour(ON_THE_HOUR, 1);
-	Schedule* new_schedule = new Schedule{ diffHour, UNDER_CAPACITY, customer };
+	Schedule* new_schedule = new Schedule{ diffHour, UNDER_CAPACITY, CUSTOMER_WITHOUT_EMAIL };
 	bookingScheduler.addSchedule(new_schedule);
 	EXPECT_EQ(true, bookingScheduler.hasSchedule(schedule));
 }
 
 TEST_F(BookingSchedulerTest, 예약완료시SMS는무조건발송) {
 
-	Schedule* schedule = new Schedule{ ON_THE_HOUR, CAPACITY_PER_HOUR, customer };
+	Schedule* schedule = new Schedule{ ON_THE_HOUR, CAPACITY_PER_HOUR, CUSTOMER_WITHOUT_EMAIL };
 	bookingScheduler.addSchedule(schedule);
 	EXPECT_EQ(true, testableSmsSender.isSendMethodIsCalled());
 
@@ -93,9 +95,23 @@ TEST_F(BookingSchedulerTest, 예약완료시SMS는무조건발송) {
 
 TEST_F(BookingSchedulerTest, 이메일이없는경우에는이메일미발송) {
 
+	TestableMailSender testableMailSender;
+	Schedule* schedule = new Schedule{ ON_THE_HOUR, UNDER_CAPACITY, CUSTOMER_WITHOUT_EMAIL };
+	bookingScheduler.setMailSender(&testableMailSender);
+	bookingScheduler.addSchedule(schedule);
+
+	EXPECT_EQ(0, testableMailSender.getCountSendMailMethodIsCalled());
 }
 
 TEST_F(BookingSchedulerTest, 이메일이있는경우에는이메일발송) {
+
+
+	TestableMailSender testableMailSender;
+	Schedule* schedule = new Schedule{ ON_THE_HOUR, UNDER_CAPACITY, CUSTOMER_WITH_EMAIL };
+	bookingScheduler.setMailSender(&testableMailSender);
+	bookingScheduler.addSchedule(schedule);
+
+	EXPECT_EQ(1, testableMailSender.getCountSendMailMethodIsCalled());
 
 }
 
