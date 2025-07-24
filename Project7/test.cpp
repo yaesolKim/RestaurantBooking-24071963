@@ -16,6 +16,12 @@ public:
 		return result;
 	}
 
+	tm addHour(tm base, int hour) {
+		base.tm_hour += hour;
+		mktime(&base);
+		return base;
+	}
+
 	tm NOT_ON_THE_HOUR, ON_THE_HOUR;
 	const int UNDER_CAPACITY = 1;
 	const int CAPACITY_PER_HOUR = 3;
@@ -63,6 +69,13 @@ TEST_F(BookingSchedulerTest, 시간대별인원제한이있다같은시간대에Capacity초과할경�
 
 TEST_F(BookingSchedulerTest, 시간대별인원제한이있다같은시간대가다르면Capacity차있어도스케쥴추가성공) {
 
+	Schedule* schedule = new Schedule{ ON_THE_HOUR, CAPACITY_PER_HOUR, customer };
+	bookingScheduler.addSchedule(schedule);
+
+	tm diffHour = addHour(ON_THE_HOUR, 1);
+	Schedule* new_schedule = new Schedule{ diffHour, UNDER_CAPACITY, customer };
+	bookingScheduler.addSchedule(new_schedule);
+	EXPECT_EQ(true, bookingScheduler.hasSchedule(schedule));
 }
 
 TEST_F(BookingSchedulerTest, 예약완료시SMS는무조건발송) {
