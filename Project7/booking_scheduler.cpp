@@ -35,22 +35,30 @@ public:
             throw std::runtime_error("Number of people is over restaurant capacity per hour");
         }
 
-        /*
+        
         // 일요일에는 시스템을 오픈하지 않는다.
-        time_t now = time(nullptr);
+        time_t now = getNow(); // 이걸 일요일 리턴하게 스텁건다.
+
+        //컴퓨터 피씨 시간 날짜 읽어오는 코드. 일요일 시간 기다릴 수 없으니 모킹 필요
         if (getDayOfWeek(now) == "Sunday") {
             throw std::runtime_error("Booking system is not available on sunday");
         }
-        */
+        
 
         schedules.push_back(schedule);
 
-        // 고객에게 SMS 발송
+        // 고객에게 SMS 발송 // 돈 들어간다 여기도 모킹 대상.
         smsSender->send(schedule);
-        // 고객이 E-Mail을 가지고 있을 경우 E-Mail 발송
+
+        // 고객이 E-Mail을 가지고 있을 경우 E-Mail 발송 // SMTP 서버 쓴다 유료다. 모킹대상임.
         if (schedule->getCustomer().getEmail() != "") {
             mailSender->sendMail(schedule);
         }
+    }
+
+    virtual time_t getNow()
+    {
+        return time(nullptr);
     }
 
     bool hasSchedule(Schedule* schedule) {
