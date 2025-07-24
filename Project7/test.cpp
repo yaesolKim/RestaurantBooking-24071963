@@ -12,6 +12,7 @@ protected:
 		ON_THE_HOUR = getTime(2021, 3, 26, 9, 0);
 
 		bookingScheduler.setSmsSender(&testableSmsSender);
+		bookingScheduler.setMailSender(&testableMailSender);
 	}
 public:
 	tm getTime(int year, int month, int day, int hour, int min) {
@@ -34,6 +35,7 @@ public:
 	BookingScheduler bookingScheduler{ CAPACITY_PER_HOUR };
 
 	TestableSmsSender testableSmsSender;
+	TestableMailSender testableMailSender;
 };
 
 TEST_F(BookingSchedulerTest, 예약은정시에만가능하다정시가아닌경우예약불가) {
@@ -94,10 +96,8 @@ TEST_F(BookingSchedulerTest, 예약완료시SMS는무조건발송) {
 }
 
 TEST_F(BookingSchedulerTest, 이메일이없는경우에는이메일미발송) {
-
-	TestableMailSender testableMailSender;
+		
 	Schedule* schedule = new Schedule{ ON_THE_HOUR, UNDER_CAPACITY, CUSTOMER_WITHOUT_EMAIL };
-	bookingScheduler.setMailSender(&testableMailSender);
 	bookingScheduler.addSchedule(schedule);
 
 	EXPECT_EQ(0, testableMailSender.getCountSendMailMethodIsCalled());
@@ -105,10 +105,7 @@ TEST_F(BookingSchedulerTest, 이메일이없는경우에는이메일미발송) {
 
 TEST_F(BookingSchedulerTest, 이메일이있는경우에는이메일발송) {
 
-
-	TestableMailSender testableMailSender;
 	Schedule* schedule = new Schedule{ ON_THE_HOUR, UNDER_CAPACITY, CUSTOMER_WITH_EMAIL };
-	bookingScheduler.setMailSender(&testableMailSender);
 	bookingScheduler.addSchedule(schedule);
 
 	EXPECT_EQ(1, testableMailSender.getCountSendMailMethodIsCalled());
